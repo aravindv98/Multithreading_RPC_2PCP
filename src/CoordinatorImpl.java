@@ -20,8 +20,8 @@ public class CoordinatorImpl extends UnicastRemoteObject implements Coordinator{
     participants = new ArrayList<>();
     for (int i = 0; i < participantHosts.size(); i++) {
       try {
-        String serverURL = "rmi://" + participantHosts.get(i) + ":" + participantPorts.get(i) + "/RMIServer";
-        RMIServer participant = (RMIServer) Naming.lookup(serverURL);
+        Registry registry = LocateRegistry.getRegistry(participantHosts.get(i), participantPorts.get(i));
+        RMIServer participant = (RMIServer) registry.lookup("RMIServer");
         participants.add(participant);
       } catch (Exception e) {
         throw new RemoteException("Unable to connect to participant", e);
@@ -29,14 +29,22 @@ public class CoordinatorImpl extends UnicastRemoteObject implements Coordinator{
     }
   }
 
-  public synchronized void prepareTransaction(String clientMessage, String serverResponse, String clientAddress, String clientPort) throws RemoteException {
-    for (RMIServer participant : participants) {
-      if (!participant.prepare(clientMessage, serverResponse, clientAddress, clientPort)) {
-        return;
+  public synchronized String prepareTransaction(String clientMessage, String serverResponse, String clientAddress, String clientPort) throws RemoteException {
+    for (int i = 0; i < participantHosts.size(); i++) {
+      int rmiPort = participantPorts.get(i);
+      if (Integer.valueOf(clientPort)==rmiPort)
+        continue;
+      if (!participants.get(i).prepare(clientMessage,serverResponse,clientAddress,clientPort)) {
+        return "Abort";
       }
     }
-    for (RMIServer participant : participants) {
-      participant.commit(clientMessage,serverResponse,clientAddress,clientPort);
+    String response = "";
+    for (int i = 0; i < participantHosts.size(); i++) {
+      int rmiPort = participantPorts.get(i);
+      if (Integer.valueOf(clientPort)==rmiPort)
+        continue;
+      response =  participants.get(i).commit(clientMessage,serverResponse,clientAddress,String.valueOf(participantPorts.get(i)));
     }
+    return response;
   }
 }

@@ -10,7 +10,7 @@ public interface RMIServer extends Remote{
   String getCommand(String key) throws RemoteException;
   boolean deleteCommand(String key) throws RemoteException;
   String deleteOperation(String key, String clientAddress, String clientPort) throws RemoteException;
-  String getOperation( String key, String clientAddress, String clientPort) throws RemoteException;
+  String getOperation( String key, String clientAddress, String clientPort, boolean getFlag) throws RemoteException;
   String putOperation(String key, String clientAddress, String clientPort) throws RemoteException;
   String performOperation(String clientMessage, String serverResponse, String clientAddress, String clientPort) throws RemoteException;
   String checkTimeOut(long startTime, long endTime) throws RemoteException;

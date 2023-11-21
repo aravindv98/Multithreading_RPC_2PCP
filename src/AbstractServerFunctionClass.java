@@ -19,12 +19,7 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
   private String commitResponse;
   // Pre-populating the key,value pairs of the hashmap.
   public AbstractServerFunctionClass() throws RemoteException{
-    map.put("1","Arsenal");
-    map.put("2","City");
-    map.put("3","Liverpool");
-    map.put("4","Chelsea");
-    map.put("5","United");
-    this.commitResponse = null;
+
   }
   //Implementing the put operation of the Map. (PUT)
   public synchronized void putCommand(String key, String value){
@@ -75,30 +70,43 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
   }
   // Helper function to invoke the get operation of the map and to check if the get operation
   // can be performed using the arguments provided.
-  public synchronized String getOperation( String key, String clientAddress, String clientPort) {
+  public synchronized String getOperation( String key, String clientAddress, String clientPort, boolean getFlag) {
     long startTime = System.currentTimeMillis();
     // Thread.sleep(500);
     //To check the number of arguments passed for get.
-    String [] validChunks = key.split(" ");
+    String[] validChunks = key.split(" ");
     // If valid, then send confirmation message to client.
-    if(getCommand(key)!=null&&validChunks.length==1) {
-      String value = getCommand(key);
-      long endTime = System.currentTimeMillis();
+    if (getFlag == true) {
+      if (getCommand(key) != null && validChunks.length == 1) {
+        String value = getCommand(key);
+        long endTime = System.currentTimeMillis();
         String timeOutMessage = checkTimeOut(startTime, endTime);
         if (timeOutMessage.equals("")) {
           System.out.println(getCurrentTime() + " Sent to client:" + " GET operation with key: " + key + " gives value: " + value
                   + " from " + clientAddress + ":" + clientPort);
-          return "GET operation with key: " + key + " gives value: " + value + " from " + clientAddress + ":" + clientPort;
+          return getCurrentTime()+" GET operation with key: " + key + " gives value: " + value + " from " + clientAddress + ":" + clientPort;
         } else {
           return timeOutMessage;
         }
+      } else {
+        System.out.println(getCurrentTime() + " Sent to client:" + " Invalid GET operation received from client"
+                + " from " + clientAddress + ":" + clientPort);
+        return getCurrentTime()+" Invalid GET operation received from client" + " from " + clientAddress + ":" + clientPort;
+      }
     }
     else {
-      System.out.println(getCurrentTime() + " Sent to client:" + " Invalid GET operation received from client"
-              + " from " + clientAddress + ":" + clientPort);
-      return "Invalid GET operation received from client" + " from " + clientAddress + ":" + clientPort;
+      if(validChunks.length==1){
+        return getCommand(key);
+      }
+      else if(validChunks.length==2){
+          return getCommand(validChunks[0]);
+      }
+      else {
+        return null;
+      }
     }
   }
+
   // Helper function to invoke the put operation of the map and to check if the put operation
   // can be performed using the arguments provided.
   public synchronized String putOperation(String key, String clientAddress, String clientPort) {
@@ -116,7 +124,7 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
       if (timeOutMessage.equals("")) {
         System.out.println(getCurrentTime() + " Sent to client:" + " PUT operation with key: " + realKey + " and value: " + value + " completed"
                 + " from " + clientAddress + ":" + clientPort);
-        return "PUT operation with key: " + realKey + " and value: " + value + " completed"
+        return getCurrentTime()+" PUT operation with key: " + realKey + " and value: " + value + " completed"
                 + " from " + clientAddress + ":" + clientPort;
       }
       else {
@@ -127,7 +135,7 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
     else {
       System.out.println(getCurrentTime()+" Sent to client:"+" Invalid PUT operation received from client"
               +" from "+clientAddress+":"+clientPort);
-      return "Invalid PUT operation received from client"
+      return getCurrentTime()+" Invalid PUT operation received from client"
               +" from "+clientAddress+":"+clientPort;
     }
 
@@ -151,7 +159,7 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
         break;
       }
       case "GET": {
-        serverResponse += getOperation(key, clientAddress, clientPort);
+        serverResponse += getOperation(key, clientAddress, clientPort, true);
         break;
       }
       case "DELETE": {
@@ -169,6 +177,12 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
   public AbstractServerFunctionClass(String coordinatorHost, int coordinatorPort) throws RemoteException {
     this.coordinatorHost = coordinatorHost;
     this.coordinatorPort = coordinatorPort;
+    map.put("1","Arsenal");
+    map.put("2","City");
+    map.put("3","Liverpool");
+    map.put("4","Chelsea");
+    map.put("5","United");
+    this.commitResponse = null;
   }
   public synchronized void connectToCoordinator() throws RemoteException{
     try {
@@ -183,7 +197,7 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
   public synchronized boolean prepare(String clientMessage, String serverResponse, String clientAddress, String clientPort) throws RemoteException {
     String operation = clientMessage.split(" ", 2)[0];
     String key = clientMessage.split(" ", 2)[1];
-    String value = this.getCommand(key);
+    String value = this.getOperation(key,clientAddress,clientPort,false);
     if(operation.equals("PUT")){
       return value==null;
     }
@@ -199,9 +213,9 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
   }
 
   public synchronized String perform(String clientMessage, String serverResponse, String clientAddress, String clientPort) throws RemoteException{
-    coordinator.prepareTransaction(clientMessage,serverResponse,clientAddress,clientPort);
-    if(this.commitResponse==null)
+    String response = coordinator.prepareTransaction(clientMessage,serverResponse,clientAddress,clientPort);
+    if(response.equals("Abort"))
       return getCurrentTime()+" Transaction Aborted!";
-    return this.commitResponse;
+    return response;
   }
 }
