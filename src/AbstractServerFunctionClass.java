@@ -1,4 +1,8 @@
-import java.rmi.server.RemoteObject;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ConcurrentHashMap;
@@ -6,16 +10,21 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Abstract server class that contains the implementation of the hashmap functions.
  */
-public abstract class AbstractServerFunctionClass extends RemoteObject implements RMIServer{
+public class AbstractServerFunctionClass extends UnicastRemoteObject implements RMIServer, Remote {
   // Map to store, get and delete key/value pairs.
   private static ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>();
+  private String coordinatorHost;
+  private int coordinatorPort;
+  private Coordinator coordinator;
+  private String commitResponse;
   // Pre-populating the key,value pairs of the hashmap.
-  public AbstractServerFunctionClass(){
+  public AbstractServerFunctionClass() throws RemoteException{
     map.put("1","Arsenal");
     map.put("2","City");
     map.put("3","Liverpool");
     map.put("4","Chelsea");
     map.put("5","United");
+    this.commitResponse = null;
   }
   //Implementing the put operation of the Map. (PUT)
   public synchronized void putCommand(String key, String value){
@@ -156,5 +165,43 @@ public abstract class AbstractServerFunctionClass extends RemoteObject implement
       }
     }
     return serverResponse;
+  }
+  public AbstractServerFunctionClass(String coordinatorHost, int coordinatorPort) throws RemoteException {
+    this.coordinatorHost = coordinatorHost;
+    this.coordinatorPort = coordinatorPort;
+  }
+  public synchronized void connectToCoordinator() throws RemoteException{
+    try {
+      Registry registry = LocateRegistry.getRegistry(coordinatorHost, coordinatorPort);
+      coordinator = (Coordinator) registry.lookup("Coordinator");
+    }
+    catch (Exception e) {
+      throw new RemoteException("Unable to connect to coordinator", e);
+    }
+  }
+
+  public synchronized boolean prepare(String clientMessage, String serverResponse, String clientAddress, String clientPort) throws RemoteException {
+    String operation = clientMessage.split(" ", 2)[0];
+    String key = clientMessage.split(" ", 2)[1];
+    String value = this.getCommand(key);
+    if(operation.equals("PUT")){
+      return value==null;
+    }
+    else if(operation.equals("DELETE")){
+      return value!=null;
+    }
+    return true; // return true for get operation
+  }
+
+  public synchronized String commit(String clientMessage,String serverResponse,String clientAddress,String clientPort) throws RemoteException {
+    this.commitResponse = this.performOperation(clientMessage,serverResponse,clientAddress,clientPort);
+    return this.commitResponse;
+  }
+
+  public synchronized String perform(String clientMessage, String serverResponse, String clientAddress, String clientPort) throws RemoteException{
+    coordinator.prepareTransaction(clientMessage,serverResponse,clientAddress,clientPort);
+    if(this.commitResponse==null)
+      return getCurrentTime()+" Transaction Aborted!";
+    return this.commitResponse;
   }
 }

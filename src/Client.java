@@ -4,6 +4,9 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 
 /**
@@ -12,12 +15,13 @@ import java.util.Scanner;
 public class Client extends AbstractClientFunctionClass{
   public static void main(String[] args){
     try {
-      String serverAddress = args[0];
-      int clientPort = Integer.parseInt(args[1]);
-      Registry registry = LocateRegistry.getRegistry(serverAddress, clientPort);
+      List<Integer> portNumbers =  Arrays.asList(5001, 5002, 5003, 5004, 5005);
+      Random rand = new Random();
+      int portNumber = portNumbers.get(rand.nextInt(portNumbers.size()));
+      Registry registry = LocateRegistry.getRegistry("localhost", portNumber);
       // Get the required object to access the server methods.
       RMIServer stub = (RMIServer) registry.lookup("RMIServer");
-      System.out.println(getCurrentTime()+" Client is running");
+      System.out.println(getCurrentTime()+" Client is running on port: "+portNumber);
       // Menu to provide interactive mode / run by file options.
       System.out.println(getCurrentTime()+" This is a menu driven program with the following commands: PUT/GET/DELETE/file");
       System.out.println(getCurrentTime()+" Enter 'exit' to exit");
@@ -36,7 +40,7 @@ public class Client extends AbstractClientFunctionClass{
               String line;
               while ((line = reader.readLine()) != null) {
                 String toServer = clientRead(line);
-                String serverResponse = stub.performOperation(toServer, "", serverAddress, String.valueOf(clientPort));
+                String serverResponse = stub.perform(toServer, "", "localhost", String.valueOf(portNumber));
                 System.out.println(getCurrentTime() + " Received from server: " + serverResponse);
               }
               break;
@@ -49,7 +53,7 @@ public class Client extends AbstractClientFunctionClass{
           // Interactive commands entered here.
           default: {
             String toServer = clientRead(clientMessage);
-            String serverResponse = stub.performOperation(toServer, "", serverAddress, String.valueOf(clientPort));
+            String serverResponse = stub.perform(toServer, "", "localhost", String.valueOf(portNumber));
             System.out.println(getCurrentTime() + " Received from server: " + serverResponse);
           }
         }

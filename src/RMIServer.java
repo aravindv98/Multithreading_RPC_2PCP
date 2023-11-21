@@ -14,4 +14,8 @@ public interface RMIServer extends Remote{
   String putOperation(String key, String clientAddress, String clientPort) throws RemoteException;
   String performOperation(String clientMessage, String serverResponse, String clientAddress, String clientPort) throws RemoteException;
   String checkTimeOut(long startTime, long endTime) throws RemoteException;
+  boolean prepare(String clientMessage, String serverResponse, String clientAddress, String clientPort) throws RemoteException;
+  String commit(String clientMessage, String serverResponse, String clientAddress, String clientPort) throws RemoteException;
+  void connectToCoordinator() throws RemoteException;
+  String perform(String clientMessage, String serverResponse, String clientAddress, String clientPort) throws RemoteException;
 }
