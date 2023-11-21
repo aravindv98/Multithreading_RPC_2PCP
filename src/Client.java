@@ -15,7 +15,9 @@ import java.util.Scanner;
 public class Client extends AbstractClientFunctionClass{
   public static void main(String[] args){
     try {
+      // Ipaddress to connect to the servers.
       String ipAddress = args[0];
+      // Port Numbers of the participants to choose from at random.
       List<Integer> portNumbers =  Arrays.asList(3001, 3002, 3003, 3004, 3005);
       Random rand = new Random();
       int portNumber = portNumbers.get(rand.nextInt(portNumbers.size()));

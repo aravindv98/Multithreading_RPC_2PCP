@@ -10,7 +10,9 @@ public class Server {
   public static void main(String[] args) {
     // Starting the server.
     try  {
+      // To get the initial server port (Coordinator Port)
       int serverPort = Integer.valueOf(args[0]);
+      // To initialise all the participant hosts and ports.
       Coordinator coordinator = new CoordinatorImpl(
               Arrays.asList("localhost", "localhost", "localhost", "localhost", "localhost"),
               Arrays.asList(serverPort+1, serverPort+2, serverPort+3, serverPort+4, serverPort+5)

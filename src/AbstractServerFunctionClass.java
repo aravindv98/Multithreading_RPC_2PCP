@@ -17,19 +17,15 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
   private int coordinatorPort;
   private Coordinator coordinator;
   private String commitResponse;
-  // Pre-populating the key,value pairs of the hashmap.
   public AbstractServerFunctionClass() throws RemoteException{
 
   }
-  //Implementing the put operation of the Map. (PUT)
   public synchronized void putCommand(String key, String value){
     map.put(key,value);
   }
-  //Implementing the get operation of the Map. (GET)
   public synchronized String getCommand(String key){
     return map.get(key);
   }
-  //Implementing the delete operation of the Map. (DELETE)
   public synchronized boolean deleteCommand(String key){
     if(map.containsKey(key)){
       map.remove(key);
@@ -43,8 +39,6 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     return currentDateTime.format(formatter);
   }
-  // Helper function to invoke the delete operation of the map and to check if the delete operation
-  // can be performed using the arguments provided.
   public synchronized String deleteOperation(String key, String clientAddress, String clientPort) {
     //To check the number of arguments passed for deletion.
     long startTime = System.currentTimeMillis();
@@ -69,8 +63,6 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
       return "Invalid DELETE operation received from client";
     }
   }
-  // Helper function to invoke the get operation of the map and to check if the get operation
-  // can be performed using the arguments provided.
   public synchronized String getOperation( String key, String clientAddress, String clientPort, boolean getFlag) {
     long startTime = System.currentTimeMillis();
     // Thread.sleep(500);
@@ -108,8 +100,6 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
     }
   }
 
-  // Helper function to invoke the put operation of the map and to check if the put operation
-  // can be performed using the arguments provided.
   public synchronized String putOperation(String key, String clientAddress, String clientPort) {
     long startTime = System.currentTimeMillis();
     // Thread.sleep(500);
@@ -148,8 +138,6 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
     }
     return "";
   }
-  // Function to redirect the requests from the client to the respective methods.
-  // The client calls only this method and the server handles all the remaining operations.
   public synchronized String performOperation(String clientMessage, String serverResponse, String clientAddress, String clientPort) {
     String operation = clientMessage.split(" ", 2)[0];
     String key = clientMessage.split(" ", 2)[1];
@@ -174,6 +162,7 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
     }
     return serverResponse;
   }
+  // Initialising the hashmap and coordinator settings.
   public AbstractServerFunctionClass(String coordinatorHost, int coordinatorPort) throws RemoteException {
     this.coordinatorHost = coordinatorHost;
     this.coordinatorPort = coordinatorPort;
