@@ -10,18 +10,19 @@ public class Server {
   public static void main(String[] args) {
     // Starting the server.
     try  {
+      int serverPort = Integer.valueOf(args[0]);
       Coordinator coordinator = new CoordinatorImpl(
               Arrays.asList("localhost", "localhost", "localhost", "localhost", "localhost"),
-              Arrays.asList(5001, 5002, 5003, 5004, 5005)
+              Arrays.asList(serverPort+1, serverPort+2, serverPort+3, serverPort+4, serverPort+5)
       );
-      Registry coordinatorRegistry = LocateRegistry.createRegistry(3200);
+      Registry coordinatorRegistry = LocateRegistry.createRegistry(serverPort);
       coordinatorRegistry.bind("Coordinator", coordinator);
-      System.out.println("Coordinator is listening on port " + 3200);
+      System.out.println("Coordinator is listening on port " + serverPort);
 
       // Start the participants
       for (int i = 0; i < 5; i++) {
-        RMIServer participant = new AbstractServerFunctionClass("localhost", 3200);
-        int port = 5001 + i;
+        RMIServer participant = new AbstractServerFunctionClass("localhost", serverPort);
+        int port = serverPort + i+1;
         Registry participantRegistry = LocateRegistry.createRegistry(port);
         participantRegistry.bind("RMIServer", participant);
         participant.connectToCoordinator();

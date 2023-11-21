@@ -15,10 +15,11 @@ import java.util.Scanner;
 public class Client extends AbstractClientFunctionClass{
   public static void main(String[] args){
     try {
-      List<Integer> portNumbers =  Arrays.asList(5001, 5002, 5003, 5004, 5005);
+      String ipAddress = args[0];
+      List<Integer> portNumbers =  Arrays.asList(3001, 3002, 3003, 3004, 3005);
       Random rand = new Random();
       int portNumber = portNumbers.get(rand.nextInt(portNumbers.size()));
-      Registry registry = LocateRegistry.getRegistry("localhost", portNumber);
+      Registry registry = LocateRegistry.getRegistry(ipAddress, portNumber);
       // Get the required object to access the server methods.
       RMIServer stub = (RMIServer) registry.lookup("RMIServer");
       System.out.println(getCurrentTime()+" Client is running on port: "+portNumber);
@@ -40,7 +41,7 @@ public class Client extends AbstractClientFunctionClass{
               String line;
               while ((line = reader.readLine()) != null) {
                 String toServer = clientRead(line);
-                String serverResponse = stub.perform(toServer, "", "localhost", String.valueOf(portNumber));
+                String serverResponse = stub.perform(toServer, "", ipAddress, String.valueOf(portNumber));
                 System.out.println(getCurrentTime() + " Received from server: " + serverResponse);
               }
               break;
@@ -53,7 +54,7 @@ public class Client extends AbstractClientFunctionClass{
           // Interactive commands entered here.
           default: {
             String toServer = clientRead(clientMessage);
-            String serverResponse = stub.perform(toServer, "", "localhost", String.valueOf(portNumber));
+            String serverResponse = stub.perform(toServer, "", ipAddress, String.valueOf(portNumber));
             System.out.println(getCurrentTime() + " Received from server: " + serverResponse);
           }
         }

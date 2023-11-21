@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class AbstractServerFunctionClass extends UnicastRemoteObject implements RMIServer, Remote {
   // Map to store, get and delete key/value pairs.
-  private static ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<String, String> map = new ConcurrentHashMap<>();
   private String coordinatorHost;
   private int coordinatorPort;
   private Coordinator coordinator;
@@ -57,15 +57,16 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
         if (responseMessage.equals("")) {
           System.out.println(getCurrentTime() + " Sent to client:" + " DELETE operation with key: " + key + " completed"
                   + " from " + clientAddress + ":" + clientPort);
-          return "DELETE operation with key: " + key + " completed" + " from " + clientAddress + ":" + clientPort;
+          return "DELETE operation with key: " + key + " completed";
         } else {
+          System.out.println(responseMessage);
           return responseMessage;
         }
     }
     else {
       System.out.println(getCurrentTime() + " Sent to client:" + " Invalid DELETE operation received from client"
               + " from " + clientAddress + ":" + clientPort);
-      return "Invalid DELETE operation received from client" + " from " + clientAddress + ":" + clientPort;
+      return "Invalid DELETE operation received from client";
     }
   }
   // Helper function to invoke the get operation of the map and to check if the get operation
@@ -84,14 +85,14 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
         if (timeOutMessage.equals("")) {
           System.out.println(getCurrentTime() + " Sent to client:" + " GET operation with key: " + key + " gives value: " + value
                   + " from " + clientAddress + ":" + clientPort);
-          return getCurrentTime()+" GET operation with key: " + key + " gives value: " + value + " from " + clientAddress + ":" + clientPort;
+          return getCurrentTime()+" GET operation with key: " + key + " gives value: " + value;
         } else {
           return timeOutMessage;
         }
       } else {
         System.out.println(getCurrentTime() + " Sent to client:" + " Invalid GET operation received from client"
                 + " from " + clientAddress + ":" + clientPort);
-        return getCurrentTime()+" Invalid GET operation received from client" + " from " + clientAddress + ":" + clientPort;
+        return getCurrentTime()+" Invalid GET operation received from client";
       }
     }
     else {
@@ -124,8 +125,7 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
       if (timeOutMessage.equals("")) {
         System.out.println(getCurrentTime() + " Sent to client:" + " PUT operation with key: " + realKey + " and value: " + value + " completed"
                 + " from " + clientAddress + ":" + clientPort);
-        return getCurrentTime()+" PUT operation with key: " + realKey + " and value: " + value + " completed"
-                + " from " + clientAddress + ":" + clientPort;
+        return getCurrentTime()+" PUT operation with key: " + realKey + " and value: " + value + " completed";
       }
       else {
         return timeOutMessage;
@@ -135,14 +135,14 @@ public class AbstractServerFunctionClass extends UnicastRemoteObject implements 
     else {
       System.out.println(getCurrentTime()+" Sent to client:"+" Invalid PUT operation received from client"
               +" from "+clientAddress+":"+clientPort);
-      return getCurrentTime()+" Invalid PUT operation received from client"
-              +" from "+clientAddress+":"+clientPort;
+      return getCurrentTime()+" Invalid PUT operation received from client";
     }
 
 
   }
   public synchronized String checkTimeOut(long startTime, long endTime){
-    if(endTime - startTime > 10){
+    long diff = endTime - startTime;
+    if(endTime - startTime > 5000){
       return getCurrentTime()+ " Request Timed out with request taking: "+
               (endTime-startTime)+" ms to process!";
     }
